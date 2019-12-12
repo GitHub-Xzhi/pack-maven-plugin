@@ -4,9 +4,9 @@ APP_NAME=#appName#
 PID_FILE=$APP_NAME\.pid
 
 if [ -f $PID_FILE ];then
-PID=$(cat $PID_FILE)
+    PID=$(cat $PID_FILE)
 else
-PID=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}'`
+    PID=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}'`
 fi
 
 if [ -z $PID ];then
