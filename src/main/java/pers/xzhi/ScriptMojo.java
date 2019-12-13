@@ -3,6 +3,7 @@ package pers.xzhi;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -13,7 +14,10 @@ import java.nio.charset.StandardCharsets;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 
-@Mojo(name = "script")
+/**
+ * 创建启动脚本
+ */
+@Mojo(name = "script", defaultPhase = LifecyclePhase.PACKAGE)
 public class ScriptMojo extends AbstractMojo {
 
 	private static final String APP_NAME_TEMPLATE = "#appName#";
