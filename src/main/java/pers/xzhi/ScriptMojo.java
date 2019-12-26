@@ -39,7 +39,9 @@ public class ScriptMojo extends AbstractMojo {
 	 */
 	@Parameter(defaultValue = "64")
 	private String xmx;
-
+	/**
+	 * 输出根目录
+	 */
 	@Parameter(defaultValue = "${project.build.directory}", readonly = true)
 	private String outDir;
 	/**
