@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="priv.xzhi.globaleye.dao.TSrcAlarmMapper">
+  <resultMap id="BaseResultMap" type="priv.xzhi.globaleye.bean.TSrcAlarm">
+    <!--@mbg.generated-->
+    <id column="iid" jdbcType="INTEGER" property="iid" />
+    <result column="id" jdbcType="VARCHAR" property="id" />
+    <result column="managedObjectId" jdbcType="VARCHAR" property="managedObjectId" />
+    <result column="faultyNestedNsInstanceId" jdbcType="VARCHAR" property="faultyNestedNsInstanceId" />
+    <result column="faultyNsVirtualLinkInstanceId" jdbcType="VARCHAR" property="faultyNsVirtualLinkInstanceId" />
+    <result column="faultyVnfInstanceId" jdbcType="VARCHAR" property="faultyVnfInstanceId" />
+    <result column="vimId" jdbcType="VARCHAR" property="vimId" />
+    <result column="resourceProviderId" jdbcType="VARCHAR" property="resourceProviderId" />
+    <result column="resourceId" jdbcType="VARCHAR" property="resourceId" />
+    <result column="vimLevelResourceType" jdbcType="VARCHAR" property="vimLevelResourceType" />
+    <result column="faultyResourceType" jdbcType="VARCHAR" property="faultyResourceType" />
+    <result column="alarmRaisedTime" jdbcType="VARCHAR" property="alarmRaisedTime" />
+    <result column="alarmChangedTime" jdbcType="VARCHAR" property="alarmChangedTime" />
+    <result column="alarmClearedTime" jdbcType="VARCHAR" property="alarmClearedTime" />
+    <result column="ackState" jdbcType="VARCHAR" property="ackState" />
+    <result column="perceivedSeverity" jdbcType="VARCHAR" property="perceivedSeverity" />
+    <result column="eventTime" jdbcType="VARCHAR" property="eventTime" />
+    <result column="eventType" jdbcType="VARCHAR" property="eventType" />
+    <result column="faultType" jdbcType="VARCHAR" property="faultType" />
+    <result column="probableCause" jdbcType="VARCHAR" property="probableCause" />
+    <result column="sRootCause" jdbcType="VARCHAR" property="sRootCause" />
+    <result column="correlatedAlarmIds" jdbcType="VARCHAR" property="correlatedAlarmIds" />
+    <result column="faultDetails" jdbcType="VARCHAR" property="faultDetails" />
+    <result column="self" jdbcType="VARCHAR" property="self" />
+    <result column="alarms" jdbcType="VARCHAR" property="alarms" />
+    <result column="dInsertTime" jdbcType="TIMESTAMP" property="dInsertTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    iid, id, managedObjectId, faultyNestedNsInstanceId, faultyNsVirtualLinkInstanceId, 
+    faultyVnfInstanceId, vimId, resourceProviderId, resourceId, vimLevelResourceType, 
+    faultyResourceType, alarmRaisedTime, alarmChangedTime, alarmClearedTime, ackState, 
+    perceivedSeverity, eventTime, eventType, faultType, probableCause, sRootCause, correlatedAlarmIds, 
+    faultDetails, `self`, alarms, dInsertTime
+  </sql>
+</mapper>

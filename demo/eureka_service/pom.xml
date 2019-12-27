@@ -1,0 +1,145 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>priv.xzhi</groupId>
+    <artifactId>xxx_Sync</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>xxx_eureka_service</artifactId>
+
+  <properties>
+    <baseOutputDir>${project.build.directory}/${project.artifactId}-${project.version}</baseOutputDir>
+    <tarOutputDir>${baseOutputDir}/${project.artifactId}</tarOutputDir>
+  </properties>
+
+  <dependencies>
+    <!-- eureka-server服务端 -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <target>1.8</target>
+          <source>1.8</source>
+          <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+
+      <!-- 打包时跳过测试 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.22.1</version>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <!-- 项目启动类 -->
+              <mainClass>priv.xzhi.eureka.EurekaApplication</mainClass>
+              <classpathPrefix>../commonLib</classpathPrefix>
+              <addClasspath>true</addClasspath>
+            </manifest>
+          </archive>
+          <finalName>${project.artifactId}</finalName>
+          <includes>
+            <include>**/*.class</include>
+          </includes>
+          <outputDirectory>${tarOutputDir}</outputDirectory>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <layout>ZIP</layout>
+          <addResources>true</addResources>
+          <includes>
+            <include>
+              <groupId>non-exists</groupId>
+              <artifactId>non-exists</artifactId>
+            </include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <!--处理依赖包-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${baseOutputDir}/commonLib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--处理资源文件-->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/main/resources</directory>
+                </resource>
+              </resources>
+              <outputDirectory>${tarOutputDir}/config</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--自动创建启动脚本-->
+      <plugin>
+        <groupId>com.github.GitHub-Xzhi</groupId>
+        <artifactId>pack-maven-plugin</artifactId>
+        <version>1.0.2</version>
+        <configuration>
+          <xms>32</xms>
+          <xmx>64</xmx>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>script</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

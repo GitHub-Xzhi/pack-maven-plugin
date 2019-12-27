@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="priv.xzhi.globaleye.dao.TAlarmEventMapper">
+  <resultMap id="BaseResultMap" type="priv.xzhi.globaleye.bean.TAlarmEvent">
+    <!--@mbg.generated-->
+    <id column="i_id" jdbcType="INTEGER" property="iId" />
+    <result column="d_insert_time" jdbcType="TIMESTAMP" property="dInsertTime" />
+    <result column="s_notification_id" jdbcType="VARCHAR" property="sNotificationId" />
+    <result column="s_vd_alarm_id" jdbcType="VARCHAR" property="sVdAlarmId" />
+    <result column="s_vendor_object_name" jdbcType="VARCHAR" property="sVendorObjectName" />
+    <result column="s_object_name" jdbcType="VARCHAR" property="sObjectName" />
+    <result column="i_object_type" jdbcType="INTEGER" property="iObjectType" />
+    <result column="d_ne_time" jdbcType="TIMESTAMP" property="dNeTime" />
+    <result column="d_ems_time" jdbcType="TIMESTAMP" property="dEmsTime" />
+    <result column="i_perceived_severity" jdbcType="INTEGER" property="iPerceivedSeverity" />
+    <result column="s_probable_cause" jdbcType="VARCHAR" property="sProbableCause" />
+    <result column="s_detail_probable_cause" jdbcType="VARCHAR" property="sDetailProbableCause" />
+    <result column="s_alarm_code" jdbcType="VARCHAR" property="sAlarmCode" />
+    <result column="i_event_type" jdbcType="INTEGER" property="iEventType" />
+    <result column="s_additional_text" jdbcType="VARCHAR" property="sAdditionalText" />
+    <result column="s_additional_info" jdbcType="VARCHAR" property="sAdditionalInfo" />
+    <result column="s_extensions" jdbcType="VARCHAR" property="sExtensions" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    <!--@mbg.generated-->
+    i_id, d_insert_time, s_notification_id, s_vd_alarm_id, s_vendor_object_name, s_object_name, 
+    i_object_type, d_ne_time, d_ems_time, i_perceived_severity, s_probable_cause, s_detail_probable_cause, 
+    s_alarm_code, i_event_type, s_additional_text, s_additional_info, s_extensions
+  </sql>
+</mapper>
