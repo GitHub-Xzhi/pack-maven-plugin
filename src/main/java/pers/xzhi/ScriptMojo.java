@@ -107,7 +107,7 @@ public class ScriptMojo extends AbstractMojo {
 
 		String tarPath = outDir + File.separator + appName + "-" + appVersion + File.separator + appName;
 
-		if (!"".equals(shellOutputPath)) {
+		if (StringUtils.isNotBlank(shellOutputPath)) {
 			tarPath = outDir + File.separator + shellOutputPath;
 		}
 		
