@@ -86,6 +86,11 @@ public class ScriptMojo extends AbstractMojo {
 	 */
 	@Parameter
 	private List<String> mainClasses;
+	/**
+	 * classpath前缀
+	 */
+	@Parameter
+	private String classpathPrefix;
 
 	private static final String BIN_PATH = "/bin";
 	private static final String RESTART_STR = "/restart.sh";
@@ -225,7 +230,9 @@ public class ScriptMojo extends AbstractMojo {
 		StringBuilder sb = new StringBuilder();
 		String winContent;
 		String linuxContent;
-
+		if (StringUtils.isNotBlank(classpathPrefix)) {
+			libRelativePath = classpathPrefix;
+		}
 		for (File l : ls) {
 			sb.append(libRelativePath).append("/").append(l.getName()).append(":");
 		}
