@@ -13,7 +13,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 
@@ -23,16 +22,27 @@ import cn.hutool.core.io.IoUtil;
 @Mojo(name = "script", defaultPhase = LifecyclePhase.PACKAGE)
 public class ScriptMojo extends AbstractMojo {
 
+	private static final String BIN_PATH = "/bin";
+	private static final String RESTART_STR = "/restart.sh";
+	private static final String START_STR = "/start.sh";
+	private static final String STOP_STR = "/stop.sh";
+	private static final String START_BAT_STR = "/start.bat";
+	private static final String MERGE_SH_STR = "/merge.sh";
+	private static final String MERGE_LIB_SH_STR = "/merge-lib.sh";
+	private static final String START_LIB_BAT_STR = "/start-lib.bat";
+	private static final String START_LIB_SH_STR = "/start-lib.sh";
+
+	private static final InputStream RESTART_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + RESTART_STR);
+	private static final InputStream START_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_STR);
+	private static final InputStream STOP_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + STOP_STR);
+	private static final InputStream START_BAT_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_BAT_STR);
+	private static final InputStream MERGE_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + MERGE_SH_STR);
+
 	private static final String APP_NAME_TEMPLATE = "#appName#";
 	private static final String XMS_TEMPLATE = "#Xms#";
 	private static final String XMX_TEMPLATE = "#Xmx#";
 	private static final String DEPENDENCYLIBLIST_TEMPLATE = "#dependencyLibList#";
 	private static final String MAINCLASS_TEMPLATE = "#mainClass#";
-
-	/**
-	 * 依赖包相对路径
-	 */
-	private String libRelativePath;
 	/**
 	 * libList-win路径
 	 */
@@ -42,84 +52,86 @@ public class ScriptMojo extends AbstractMojo {
 	 */
 	private static final String  LIBLIST_LINUX_PATH = "/libList/libList-linux";
 	/**
+	 * 依赖包相对路径
+	 */
+	private String libRelativePath;
+	/**
+	 * JVM最小内存，默认32
+	 */
+	private String xms;
+	/**
+	 * JVM最大内存，默认64
+	 */
+	private String xmx;
+	/**
+	 * 依赖包路径
+	 */
+	private String dependencyPath;
+	/**
+	 * 目标路径
+	 */
+	private String tarPath;
+	/**
 	 * 程序名称
 	 */
 	@Parameter(defaultValue = "${project.artifactId}")
 	private String appName;
 	/**
-	 * JVM最小内存，默认32
-	 */
-	@Parameter(defaultValue = "32")
-	private String xms;
-	/**
-	 * JVM最大内存，默认64
-	 */
-	@Parameter(defaultValue = "64")
-	private String xmx;
-	/**
 	 * 输出根目录
 	 */
 	@Parameter(defaultValue = "${project.build.directory}", readonly = true)
-	private String outDir;
+	private String outDirTemp;
 	/**
 	 * 程序版本
 	 */
 	@Parameter(defaultValue = "${project.version}")
 	private String appVersion;
 	/**
-	 * 多个脚本是否合并成一个，默认一个
-	 */
-	@Parameter(defaultValue = "true")
-	private boolean mergeShell = true;
-	/**
-	 * 脚本输出路径（顶级目录是target），默认路径：target/appName-appVersion/appName
+	 * 脚本配置列表
 	 */
 	@Parameter
-	private String shellOutputPath;
+	private List<ShellConf> shells;
 	/**
-	 * 依赖包路径
+	 * 主要配置信息
 	 */
 	@Parameter
-	private String dependencyPath;
+	private MajorConf majorConf;
+
 	/**
-	 * 启动类列表
+	 * 初始化
 	 */
-	@Parameter
-	private List<String> mainClasses;
-	/**
-	 * classpath前缀
-	 */
-	@Parameter
-	private String classpathPrefix;
+	private void init() {
+		if (majorConf == null) {
+			throw new RuntimeException("majorConf节点不能为空");
+		}
+		xms = majorConf.getXms();
+		xmx = majorConf.getXmx();
+		dependencyPath = majorConf.getDependencyPath();
+		for (ShellConf shell : shells) {
+			if (StringUtils.isBlank(shell.getMainClass())) {
+				throw new RuntimeException("启动类不能为空");
+			}
+		}
+		String outDir = majorConf.getOutDir();
+		String shellOutputPath = majorConf.getShellOutputPath();
 
-	private static final String BIN_PATH = "/bin";
-	private static final String RESTART_STR = "/restart.sh";
-	private static final String START_STR = "/start.sh";
-	private static final String STOP_STR = "/stop.sh";
-	private static final String START_BAT_STR = "/start.bat";
-	private static final String MERGE_SH_STR = "/merge.sh";
-	private static final String MERGE_LIB_SH_STR = "/merge-lib.sh";
-	private static final String START_LIB_BAT_STR = "/start-lib.bat";
-
-	private static final InputStream RESTART_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + RESTART_STR);
-	private static final InputStream START_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_STR);
-	private static final InputStream STOP_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + STOP_STR);
-	private static final InputStream START_BAT_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_BAT_STR);
-	private static final InputStream MERGE_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + MERGE_SH_STR);
-
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		System.out.println("开始创建脚本……");
-
-		String tarPath = outDir + File.separator + appName + "-" + appVersion + File.separator + appName;
+		if (StringUtils.isBlank(outDir)) {
+			outDir = outDirTemp;
+		}
+		tarPath = outDir + File.separator + appName + "-" + appVersion + File.separator + appName;
 
 		if (StringUtils.isNotBlank(shellOutputPath)) {
 			tarPath = outDir + File.separator + shellOutputPath;
 		}
-		
-		if (StringUtils.isBlank(dependencyPath)) {
-			inlayDependencyLib(tarPath);
+	}
+
+	public void execute() throws MojoExecutionException, MojoFailureException {
+		System.out.println("开始创建脚本……");
+		init();
+		if (majorConf.isUseInlayLib()) {
+			inlayDependencyLib();
 		} else {
-			externalDependencyLib(tarPath);
+			externalDependencyLib();
 		}
 
 		System.out.println("创建脚本成功！");
@@ -130,69 +142,98 @@ public class ScriptMojo extends AbstractMojo {
 	/**
 	 * 内置依赖包
 	 */
-	private void inlayDependencyLib(String tarPath) {
-		String restartContent = IoUtil.read(RESTART_SH_IS, StandardCharsets.UTF_8);
+	private void inlayDependencyLib() {
 		String startContent = IoUtil.read(START_SH_IS, StandardCharsets.UTF_8);
-		String stopContent = IoUtil.read(STOP_SH_IS, StandardCharsets.UTF_8);
 		String startBatContent = IoUtil.read(START_BAT_IS, StandardCharsets.UTF_8);
 		String mergeContent = IoUtil.read(MERGE_SH_IS, StandardCharsets.UTF_8);
 
 		startContent = startContent.replace(APP_NAME_TEMPLATE, appName)
 				.replace(XMS_TEMPLATE, xms)
 				.replace(XMX_TEMPLATE, xmx);
-		restartContent = restartContent.replace(APP_NAME_TEMPLATE, appName);
-		stopContent = stopContent.replace(APP_NAME_TEMPLATE, appName);
 		startBatContent = startBatContent.replace(APP_NAME_TEMPLATE, appName);
 		mergeContent = mergeContent.replace(APP_NAME_TEMPLATE, appName)
 				.replace(XMS_TEMPLATE, xms)
 				.replace(XMX_TEMPLATE, xmx);
 
-		if (mergeShell) {
-			FileUtil.writeUtf8String(mergeContent, FileUtil.touch(tarPath + "/" + appName + ".sh"));
-		} else {
-			FileUtil.writeUtf8String(restartContent, FileUtil.touch(tarPath + RESTART_STR));
-			FileUtil.writeUtf8String(startContent, FileUtil.touch(tarPath + START_STR));
-			FileUtil.writeUtf8String(stopContent, FileUtil.touch(tarPath + STOP_STR));
-		}
-		FileUtil.writeUtf8String(startBatContent, FileUtil.touch(tarPath + START_BAT_STR));
+		ShellConf shellConf = shells.get(0);
+		dealShellNameAndContent(startContent, startBatContent, mergeContent, shellConf, shells.size());
 	}
 
 	/**
 	 * 外置依赖包
 	 */
-	private void externalDependencyLib(String tarPath) {
+	private void externalDependencyLib() {
 		createDependencyLibList(tarPath);
-		if(CollUtil.isEmpty(mainClasses)) {
-		    throw new RuntimeException("启动类不能为空");
-		}
 		String libRelativePathForLinux = libRelativePath + LIBLIST_LINUX_PATH;
 		String libRelativePathForWin = (libRelativePath + LIBLIST_WIN_PATH).replaceAll("/", "//");
 
-		for (String mainclass : mainClasses) {
+		for (ShellConf shellConf : shells) {
+			String mainClass = shellConf.getMainClass();
 			InputStream MERGE_LIB_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + MERGE_LIB_SH_STR);
 			InputStream START_LIB_BAT_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_LIB_BAT_STR);
+			InputStream START_LIB_SH_IS = ScriptMojo.class.getResourceAsStream(BIN_PATH + START_LIB_SH_STR);
 			String mergeLibContent = IoUtil.read(MERGE_LIB_SH_IS, StandardCharsets.UTF_8);
 			String startLibBatContent = IoUtil.read(START_LIB_BAT_IS, StandardCharsets.UTF_8);
+			String startLibShContent = IoUtil.read(START_LIB_SH_IS, StandardCharsets.UTF_8);
 
-			String className = appName;
-			if(mainClasses.size() > 1) {
-				String[] split = mainclass.split("\\.");
-				className = split[split.length - 1].replace("Application", "");
-			}
 			mergeLibContent = mergeLibContent.replaceAll(DEPENDENCYLIBLIST_TEMPLATE, libRelativePathForLinux)
 					.replaceAll(APP_NAME_TEMPLATE, appName)
 					.replaceAll(XMS_TEMPLATE, xms)
 					.replaceAll(XMX_TEMPLATE, xmx)
-					.replaceAll(MAINCLASS_TEMPLATE, mainclass);
+					.replaceAll(MAINCLASS_TEMPLATE, mainClass);
 
 			startLibBatContent = startLibBatContent.replaceAll(DEPENDENCYLIBLIST_TEMPLATE, libRelativePathForWin)
 					.replaceAll(APP_NAME_TEMPLATE, appName)
-					.replaceAll(MAINCLASS_TEMPLATE, mainclass)
+					.replaceAll(MAINCLASS_TEMPLATE, mainClass)
 					.replaceAll("//", "\\\\");
 
-			FileUtil.writeUtf8String(mergeLibContent, FileUtil.touch(tarPath + "/" + className + ".sh"));
-			FileUtil.writeUtf8String(startLibBatContent, FileUtil.touch(tarPath + "/" + className + ".bat"));
+			startLibShContent = startLibShContent.replaceAll(DEPENDENCYLIBLIST_TEMPLATE, libRelativePathForLinux)
+					.replace(APP_NAME_TEMPLATE, appName)
+					.replace(XMS_TEMPLATE, xms)
+					.replace(XMX_TEMPLATE, xmx)
+					.replaceAll(MAINCLASS_TEMPLATE, mainClass);
+
+			dealShellNameAndContent(startLibShContent, startLibBatContent, mergeLibContent, shellConf, shells.size());
 		}
+	}
+
+	/**
+	 * 处理脚本名称和内容
+	 */
+	private void dealShellNameAndContent(String startContent, String startBatContent, String mergeContent,
+										 ShellConf shellConf, int shellSize) {
+		String mainClass = shellConf.getMainClass();
+
+		String restartContent = IoUtil.read(RESTART_SH_IS, StandardCharsets.UTF_8);
+		String stopContent = IoUtil.read(STOP_SH_IS, StandardCharsets.UTF_8);
+
+		restartContent = restartContent.replace(APP_NAME_TEMPLATE, appName);
+		stopContent = stopContent.replace(APP_NAME_TEMPLATE, appName);
+
+		String className = appName;
+		String startBatName = START_BAT_STR;
+		if (shellSize > 1) {
+			String[] split = mainClass.split("\\.");
+			className = split[split.length - 1].replace("Application", "");
+			startBatName = File.separator + className + ".bat";
+		}
+
+		if (shellSize > 1 || shellConf.isMergeLinuxShell()) {
+			String linuxShellName = shellConf.getLinuxShellName();
+			if (StringUtils.isNotBlank(linuxShellName)) {
+				className = linuxShellName;
+			}
+			FileUtil.writeUtf8String(mergeContent, FileUtil.touch(tarPath + "/" + className + ".sh"));
+		} else {
+			FileUtil.writeUtf8String(startContent, FileUtil.touch(tarPath + START_STR));
+			FileUtil.writeUtf8String(restartContent, FileUtil.touch(tarPath + RESTART_STR));
+			FileUtil.writeUtf8String(stopContent, FileUtil.touch(tarPath + STOP_STR));
+		}
+		String winShellName = shellConf.getWinShellName();
+		if (StringUtils.isNotBlank(winShellName)) {
+			startBatName = File.separator + winShellName + ".bat";
+		}
+		FileUtil.writeUtf8String(startBatContent, FileUtil.touch(tarPath + startBatName));
 	}
 
 	/**
@@ -230,11 +271,13 @@ public class ScriptMojo extends AbstractMojo {
 		StringBuilder sb = new StringBuilder();
 		String winContent;
 		String linuxContent;
-		if (StringUtils.isNotBlank(classpathPrefix)) {
-			libRelativePath = classpathPrefix;
+		String classPathPrefix = majorConf.getClassPathPrefix();
+		String libRelativePathTemp = libRelativePath;
+		if (StringUtils.isNotBlank(classPathPrefix)) {
+			libRelativePathTemp = classPathPrefix;
 		}
 		for (File l : ls) {
-			sb.append(libRelativePath).append("/").append(l.getName()).append(":");
+			sb.append(libRelativePathTemp).append("/").append(l.getName()).append(":");
 		}
 		linuxContent = sb.toString();
 		winContent = linuxContent.replaceAll("/","\\\\").replaceAll(":", ";");
