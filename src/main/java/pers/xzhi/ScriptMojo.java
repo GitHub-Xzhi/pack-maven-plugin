@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
@@ -121,8 +122,12 @@ public class ScriptMojo extends AbstractMojo {
 		tarPath = outDir + File.separator + appName + "-" + appVersion + File.separator + appName;
 
 		if (StringUtils.isNotBlank(shellOutputPath)) {
+			if (shellOutputPath.equals("/") || shellOutputPath.equals("\\")) {
+				shellOutputPath = "";
+			}
 			tarPath = outDir + File.separator + shellOutputPath;
 		}
+		tarPath = tarPath.replaceAll("[/\\\\]", Matcher.quoteReplacement(File.separator));
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {

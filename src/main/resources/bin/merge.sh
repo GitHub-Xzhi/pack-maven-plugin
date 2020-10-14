@@ -1,8 +1,8 @@
 #! /bin/shell
 
 APP_NAME="#appName#"
-APP_JAR_NAME="$APP_NAME.jar"
-PID_FILE=$APP_NAME\.pid
+APP_JAR_PATH=$(pwd)/"$APP_NAME.jar"
+PID_FILE=$APP_NAME.pid
 
 #使用说明
 usage() {
@@ -16,14 +16,14 @@ usage() {
 
 # 获取程序PID
 getPid(){
-    PID=`ps -ef|grep $APP_JAR_NAME|grep -v grep|awk '{print $2}'`
+    PID=`ps -ef|grep $APP_JAR_PATH|grep -v grep|awk '{print $2}'`
 }
 
 # 启动
 start() {
     getPid
     if [ -z $PID ];then
-        nohup java -Xms#Xms#m -Xmx#Xmx#m -jar $APP_JAR_NAME >/dev/null 2>err.log &
+        nohup java -Xms#Xms#m -Xmx#Xmx#m -jar $APP_JAR_PATH >/dev/null 2>err.log &
         echo $! > $PID_FILE
         echo "start $APP_NAME successed PID=$!"
     else

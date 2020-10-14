@@ -1,12 +1,18 @@
 #!/bin/bash
 
-APP_NAME=#appName#
-PID_FILE=$APP_NAME\.pid
+APP_NAME="#appName#"
+APP_JAR_PATH=$(pwd)/"$APP_NAME.jar"
+PID_FILE=$APP_NAME.pid
+
+# 获取程序PID
+getPid(){
+    PID=`ps -ef|grep $APP_JAR_PATH|grep -v grep|awk '{print $2}'`
+}
 
 if [ -f $PID_FILE ];then
     PID=$(cat $PID_FILE)
 else
-    PID=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}'`
+    getPid
 fi
 
 if [ -z $PID ];then
@@ -16,7 +22,7 @@ else
     kill $PID
     sleep 2
     rm -rf $PID_FILE
-    PID=`ps -ef|grep $APP_NAME|grep -v grep|awk '{print $2}'`
+    getPid
     if [ $PID ];then
         echo "kill -9 $PID"
         kill -9 $PID
