@@ -1,5 +1,7 @@
 package pers.xzhi;
 
+import java.io.File;
+
 import lombok.Data;
 
 /**
@@ -12,7 +14,7 @@ public class MajorConf {
     /**
      * 输出根目录
      */
-    private String outDir;
+    private File outDir;
     /**
      * JVM最小内存，默认32
      */
@@ -28,7 +30,7 @@ public class MajorConf {
     /**
      * 依赖包路径
      */
-    private String dependencyPath;
+    private File dependencyPath;
     /**
      * 是否使用内置依赖包classPath，true内置，false外置
      */

@@ -25,4 +25,13 @@ public class ShellConf {
      * 针对Linux的start、stop、restart三个脚本是否合并成一个，默认合并
      */
     private boolean mergeLinuxShell = true;
+    /**
+     * 核心jar所在的根路径
+     */
+    private String basePath = "$(pwd)";
+    /**
+     * 脚本名称批处理
+     */
+    private String shellNameBat;
+
 }
